@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portofolio | Achmad Afyan Nugraha</title>
+    <link rel="icon" type="image/x-icon" href="https://static.thenounproject.com/png/1878520-200.png">
+</head>
+
+<style>
+    :root {
+    --primary: #1e1e2f;
+    --secondary: #4a90e2;
+    --bg: #f5f7fa;
+    --text: #333;
+}
+
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: var(--primary);
+    color: white;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    position: relative;
+}
+
+.navbar nav a::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background: var(--secondary);
+    left: 0;
+    bottom: -5px;
+    transition: 0.3s;
+}
+
+.navbar nav a:hover::after {
+    width: 100%;
+}
+
+/* HERO */
+.hero {
+    min-height: 90vh;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+        url("img/hero-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.hero-content img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--secondary);
+    margin-bottom: 20px;
+}
+
+/* SECTION */
+.section-title {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 40px;
+    font-size: 15px;
+}
+
+/* ACHIEVEMENT */
+.achievement {
+    padding: 70px 40px;
+}
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 30px;
+}
+
+.card {
+    position: relative;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    transition: transform 0.4s ease;
+}
+
+.card:hover {
+    transform: scale(1.08);
+    z-index: 10;
+}
+
+.img-box {
+    height: 265px;
+    overflow: hidden;
+}
+
+.img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.card:hover .img-box img {
+    transform: scale(1.2);
+}
+
+.detail {
+    position: absolute;
+    inset: 0;
+    background: rgba(30,30,47,0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.card:hover .detail {
+    opacity: 1;
+}
+
+/* SOCIAL */
+.social {
+    background: white;
+    padding: 60px 40px;
+}
+
+.social-list {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.social-list a {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: bold;
+    padding: 10px 18px;
+    border: 2px solid var(--primary);
+    border-radius: 25px;
+    transition: 0.3s;
+}
+
+.social-list a:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* FOOTER */
+footer {
+    background-color: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+    }
+
+    .navbar nav {
+        margin-top: 10px;
+    }
+
+    .social-list {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+
+<body>
+
+<header class="navbar">
+    <h1 class="logo">Portofolio</h1>
+    <nav>
+        <a href="#hero">Home</a>
+        <a href="#achievement">Pencapaian</a>
+        <a href="#social">Kontak</a>
+    </nav>
+</header>
+
+<!-- HERO -->
+<section id="hero" class="hero">
+    <div class="hero-content">
+        <img src="img/pp.jpeg" alt="Foto Profil">
+        <h2>About Me</h2>
+        <p>
+            Perkenalkan nama saya Achmad Afyan Nugraha. Saya lahir pada 9 Mei 2008 di
+            Sidoarjo, Jawa Timur. Saya merupakan siswa SMK Krian 1 Sidoarjo jurusan
+            Rekayasa Perangkat Lunak.
+        </p>
+    </div>
+</section>
+
+<!-- ACHIEVEMENT -->
+<section id="achievement" class="achievement">
+    <h2 class="section-title">Pencapaian</h2>
+    <p class="section-subtitle">Beberapa prestasi yang pernah saya raih</p>
+
+    <div class="achievement-grid">
+
+        <article class="card">
+            <div class="img-box">
+                <img src="img/sk1Festt.jpeg" alt="SKARISA FEST">
+            </div>
+            <div class="detail">
+                <h3>Juara 3 SKARISA FEST</h3>
+                <p>
+                    Meraih juara 3 lomba esport MLBB tingkat pelajar dan umum yang
+                    diselenggarakan di SMK 1 Krian tahun 2026.
+                </p>
+            </div>
+        </article>
+
+        <article class="card">
+            <div class="img-box">
+                <img src="img/104.png" alt="Arena Of Champion">
+            </div>
+            <div class="detail">
+                <h3>Top 10 Arena Of Champion</h3>
+                <p>
+                    Meraih posisi urutan ke 7 di lomba esport MLBB tingkat pelajar di event Arena Of Champion yang diselenggarakan
+                    di Balai Kota Mojokerto tahun 2025.
+                </p>
+            </div>
+        </article>
+
+        <article class="card">
+            <div class="img-box">
+                <img src="img/b7341066-a748-4201-924b-18fc3e572b6c.jpg" alt="Good Day x MPL">
+            </div>
+            <div class="detail">
+                <h3>Runner Up Good Day x MPL</h3>
+                <p>
+                    Meraih posisi runner up lomba MLBB tingkat pelajar dan mewakili Kabupaten Sidoarjo
+                    ke final di WTC Mall Surabaya tahun 2025.
+                </p>
+            </div>
+        </article>
+
+    </div>
+</section>
+
+<!-- SOCIAL -->
+<section id="social" class="social">
+    <h2 class="section-title">Sosial Media</h2>
+    <ul class="social-list">
+        <li><a href="https://www.instagram.com/yanzvoyager" target="_blank">Instagram</a></li>
+        <li><a href="https://github.com/AfyanNugraha" target="_blank">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/achmad-afyan-nugraha-4546743a5" target="_blank">LinkedIn</a></li>
+    </ul>
+</section>
+
+<footer>
+    <p>&copy; 2026 Achmad Afyan Nugraha | Web Portofolio</p>
+</footer>
+<script>
+    // Tombol back otomatis
+document.addEventListener('DOMContentLoaded', function() {
+    // Buat tombol back
+    const backBtn = document.createElement('a');
+    backBtn.href = '../navigasi/index.html';
+    backBtn.innerHTML = '← Kembali';
+    backBtn.className = 'back-btn';
+    
+    // Style tombol
+    backBtn.style.cssText = `
+        position: fixed; top: 510px; left: 1080px; z-index: 9999;
+        background: #4a90e2; color: white; padding: 12px 20px;
+        border-radius: 25px; text-decoration: none; font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s;
+    `;
+    
+    backBtn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+    });
+    
+    backBtn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+    });
+    
+    document.body.appendChild(backBtn);
+});
+</script>
+</body>
+</html>
