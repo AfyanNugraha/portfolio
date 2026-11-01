@@ -19,7 +19,7 @@ Tagline: Always Learning,
 Tagline Italic: Always Growing.
 Bio: Hello! I am **Achmad Afyan Nugraha**, XII Grade Vocational High School Student — This portfolio is a collection of my learning journey, projects, and work that I've developed as a first step toward a career in technology.
 SEO Judul: Achmad Afyan Nugraha | Portfolio
-SEO Deskripsi: Siswa SMK, kelas 12, jurusan Software Developer, Achmad Afyan Nugraha, Afyan, Achmad
+SEO Deskripsi:Explore the portfolio of a vocational high school student passionate about software development and cybersecurity, featuring projects, certifications, and industrial internship experience in maintenance planning.
 Credit Footer: 
 
 ## Tags Hero
