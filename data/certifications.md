@@ -7,6 +7,12 @@ Meta: VERIFIED RECORDS
 Judul: Certifications & *credentials.*
 Deskripsi: Kumpulan sertifikasi dan prestasi yang mencerminkan komitmen saya terhadap pembelajaran berkelanjutan, pengembangan keterampilan, dan pertumbuhan profesional di bidang teknologi.
 
+## Cybersecurity Competition Finalist — FITCOM
+Penerbit: Fakultas Informatika dan Teknologi Universitas Dinamika
+Deskripsi: Diakui sebagai finalis dalam Kompetisi Keamanan Siber FITCOM, yang menunjukkan pengetahuan, kemampuan pemecahan masalah, dan minat dalam keamanan siber. Prestasi ini mencerminkan komitmen saya untuk mengeksplorasi keamanan informasi dan terus mengembangkan keterampilan teknis saya.
+Tanggal: 29 October 2026
+File: /certs/FITCOMCySec.pdf
+
 ## STS Project Completion Certificate
 Penerbit: SMKS 1 Krian Sidoarjo
 Deskripsi: Penghargaan diberikan setelah menyelesaikan proyek akademik yang melibatkan pengembangan Kalkulator BMI, Pembuatan Sistem Database Perpustakaan Universitas dan Aplikasi Manajemen Inventaris sebagai bagian dari penilaian tengah semester sekolah.
