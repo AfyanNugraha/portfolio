@@ -61,8 +61,8 @@ export default function Certifications() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              whileHover={{ y: -6, borderColor: '#3b82f6' }}
-              className="p-6 rounded-2xl bg-[#121212] border border-zinc-800 transition-all flex flex-col justify-between group text-left cursor-pointer"
+              whileHover={{ y: -6 }}
+              className="p-6 rounded-2xl bg-[#121212] border border-zinc-800 hover:border-blue-500 transition-all flex flex-col justify-between group text-left cursor-pointer"
             >
               <div>
                 <div className="flex items-center justify-between mb-8">

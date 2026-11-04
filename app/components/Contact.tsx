@@ -29,8 +29,8 @@ export default function Contact() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: idx * 0.08 }}
-              whileHover={{ y: -3, borderColor: '#3b82f6' }}
-              className="p-6 rounded-2xl bg-[#121212] border border-zinc-800 flex items-center justify-between group transition-all"
+              whileHover={{ y: -3 }}
+              className="p-6 rounded-2xl bg-[#121212] border border-zinc-800 hover:border-blue-500 flex items-center justify-between group transition-all"
             >
               <div>
                 <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-1">{s.name}</div>
