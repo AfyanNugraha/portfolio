@@ -154,7 +154,7 @@ export default function Hero() {
             y: { duration: tile.duration, repeat: Infinity, ease: 'easeInOut' },
             rotate: { duration: tile.duration, repeat: Infinity, ease: 'easeInOut' },
           }}
-          className={`absolute ${i >= 2 ? 'hidden ' : ''}sm:block ${tile.cls} rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-[2px]`}
+          className={`absolute hidden md:block ${tile.cls} rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-[2px]`}
           style={{
             transformPerspective: 900,
             background: 'linear-gradient(135deg, #161616 0%, #0c0c0c 100%)',

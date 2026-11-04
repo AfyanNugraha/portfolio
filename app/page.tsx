@@ -9,6 +9,8 @@ import Projects from './components/Projects';
 import Certifications from './components/Certifications';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import Lanyard from './components/Lanyard';
+import LanyardSection from './components/LanyardSection';
 
 export default function Home() {
   return (
@@ -17,7 +19,12 @@ export default function Home() {
       <Navbar />
       <SectionNav />
       <ScrollProgress />
-      <Hero />
+      <div className="hidden md:block">
+        <Hero />
+      </div>
+      <div className="md:hidden">
+        <LanyardSection />
+      </div>
       <About />
       <Projects />
       <Experience />
