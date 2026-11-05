@@ -1,6 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import ErrorBoundary from './ErrorBoundary';
+import LanyardFallback from './LanyardFallback';
 
 const Lanyard3D = dynamic(() => import('./Lanyard3D'), { ssr: false });
 
@@ -20,8 +22,10 @@ export default function LanyardSection() {
         }}
       />
 
-      {/* Lanyard 3D interaktif */}
-      <Lanyard3D />
+      {/* Lanyard 3D interaktif — ErrorBoundary: fallback statis jika WebGL crash */}
+      <ErrorBoundary name="Lanyard3D" fallback={<LanyardFallback />}>
+        <Lanyard3D />
+      </ErrorBoundary>
     </section>
   );
 }

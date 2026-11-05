@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import SectionHeader from './SectionHeader';
 import { getProjects } from '@/lib/content';
@@ -34,10 +35,12 @@ export default function Projects() {
                 {/* Media preview: custom image or aesthetic DFIR fallback */}
                 <div className="relative w-full h-40 mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 flex items-center justify-center group-hover:border-zinc-700 transition-colors">
                   {item.image ? (
-                    <img
+                    <Image
                       src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      alt={`Screenshot proyek ${item.title}`}
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full p-4 flex flex-col justify-between relative overflow-hidden">

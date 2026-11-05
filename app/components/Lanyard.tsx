@@ -9,6 +9,7 @@ import {
   useMotionTemplate,
 } from 'framer-motion';
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 /** Jarak anchor (ujung atas tali) → kartu, saat posisi diam. */
 const REST_LEN = 160;
@@ -156,10 +157,12 @@ export default function Lanyard() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800" />
 
           {/* Foto */}
-          <img
+          <Image
             src="/id-card.jpeg"
             alt="ID Card"
-            className="w-full h-full object-cover pointer-events-none"
+            fill
+            sizes="(min-width: 640px) 128px, 112px"
+            className="object-cover pointer-events-none"
           />
 
           {/* Glossy reflection */}
