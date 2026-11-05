@@ -130,7 +130,13 @@ function makeCardTexture(photo: THREE.Texture) {
 }
 
 /* ---------------- Scene 3D ---------------- */
-function Scene({ shared }: { shared: Shared }) {
+function Scene({
+  shared,
+  onReady,
+}: {
+  shared: Shared;
+  onReady?: () => void;
+}) {
   const camera = useThree((s) => s.camera);
   const photo = useLoader(THREE.TextureLoader, '/id-card.jpeg');
 
@@ -195,6 +201,28 @@ function Scene({ shared }: { shared: Shared }) {
       cardTex.dispose();
     };
   }, [camera, shared]);
+
+  /*
+   * Sinyal "scene siap" untuk skeleton di LanyardSection.
+   * Scene ini baru commit setelah useLoader('/id-card.jpeg') selesai
+   * (useLoader men-suspend di Suspense), jadi efek ini jalan tepat
+   * saat texture sudah ada. Delay 2 requestAnimationFrame agar
+   * benar-benar ada frame yang ter-render sebelum skeleton fade-out.
+   * Ref: prop onReady berupa inline arrow — tidak boleh meng-cancel rAF.
+   */
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
+  useEffect(() => {
+    let frame2 = 0;
+    const frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => onReadyRef.current?.());
+    });
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
+  }, []);
 
   const acc = useRef(0);
   const elapsedTime = useRef(0);
@@ -414,7 +442,7 @@ function Scene({ shared }: { shared: Shared }) {
 }
 
 /* ---------------- Host: canvas + area interaksi ---------------- */
-export default function Lanyard3D() {
+export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
   const sharedRef = useRef<Shared>({
     drag: false,
     target: new THREE.Vector3(0, ANCHOR_Y - N * SEG, 0),
@@ -483,7 +511,7 @@ export default function Lanyard3D() {
         dpr={[1, 2]}
       >
         <Suspense fallback={null}>
-          <Scene shared={sharedRef.current} />
+          <Scene shared={sharedRef.current} onReady={onReady} />
         </Suspense>
       </Canvas>
 

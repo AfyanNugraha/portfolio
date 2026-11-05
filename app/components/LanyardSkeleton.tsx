@@ -9,7 +9,7 @@ export default function LanyardSkeleton() {
     <div
       role="status"
       aria-label="Memuat ID card 3D"
-      className="absolute inset-0 flex flex-col items-center justify-center select-none"
+      className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none"
     >
       {/* Tali lanyard */}
       <div className="w-1.5 h-32 rounded-full skeleton" />

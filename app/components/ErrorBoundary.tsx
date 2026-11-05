@@ -8,6 +8,8 @@ type ErrorBoundaryProps = {
   fallback: React.ReactNode;
   /** Label untuk pesan di console — membantu debugging. */
   name?: string;
+  /** Dipanggil saat subtree anak crash — mis. melepas skeleton loading. */
+  onError?: (error: Error) => void;
 };
 
 type ErrorBoundaryState = {
@@ -38,6 +40,7 @@ export default class ErrorBoundary extends React.Component<
       error,
       info.componentStack
     );
+    this.props.onError?.(error);
   }
 
   render() {
