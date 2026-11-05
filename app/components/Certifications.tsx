@@ -18,6 +18,16 @@ const { header, certs: CERTS } = getCerts();
 
 export default function Certifications() {
   const [active, setActive] = useState<Cert | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(true);
+
+  // Reset skeleton tiap ganti sertifikat; timeout = jaring pengaman
+  // bila event load iframe PDF tidak pernah datang (browser tertentu).
+  useEffect(() => {
+    if (!active) return;
+    setPdfLoading(true);
+    const t = setTimeout(() => setPdfLoading(false), 4000);
+    return () => clearTimeout(t);
+  }, [active]);
 
   // Lock scroll + close on Escape while modal is open
   useEffect(() => {
@@ -149,14 +159,39 @@ export default function Certifications() {
 
               {/* PDF viewer (lazy: only rendered while open) */}
               <div
-                className="flex-1 min-h-0 bg-[#0a0a0a] select-none"
+                className="relative flex-1 min-h-0 bg-[#0a0a0a] select-none"
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <iframe
                   src={`${active.pdf}#toolbar=0&navpanes=0&statusbar=0`}
                   title={active.title}
                   className="w-full h-full min-h-[50vh] border-0"
+                  onLoad={() => setPdfLoading(false)}
                 />
+
+                {/* Skeleton halaman PDF — tampil sampai iframe load
+                    (atau maks 4 detik sebagai fallback) */}
+                {pdfLoading && (
+                  <div
+                    role="status"
+                    aria-label="Memuat PDF"
+                    className="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center gap-5 p-6"
+                  >
+                    <div className="w-full max-w-sm aspect-[1/1.414] rounded-md border border-zinc-800 bg-[#111111] shadow-2xl p-6 flex flex-col gap-3.5">
+                      <div className="h-5 w-2/3 rounded skeleton" />
+                      <div className="h-2.5 w-full rounded skeleton" />
+                      <div className="h-2.5 w-11/12 rounded skeleton" />
+                      <div className="h-2.5 w-4/5 rounded skeleton" />
+                      <div className="h-2.5 w-full rounded skeleton" />
+                      <div className="mt-4 h-16 w-full rounded skeleton" />
+                      <div className="h-2.5 w-10/12 rounded skeleton" />
+                      <div className="h-2.5 w-3/4 rounded skeleton" />
+                    </div>
+                    <span className="font-mono text-xs text-zinc-600">
+                      loading pdf…
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Footer actions */}

@@ -3,8 +3,13 @@
 import dynamic from 'next/dynamic';
 import ErrorBoundary from './ErrorBoundary';
 import LanyardFallback from './LanyardFallback';
+import LanyardSkeleton from './LanyardSkeleton';
 
-const Lanyard3D = dynamic(() => import('./Lanyard3D'), { ssr: false });
+// loading: skeleton tampil selama chunk three.js/R3F masih di-load
+const Lanyard3D = dynamic(() => import('./Lanyard3D'), {
+  ssr: false,
+  loading: () => <LanyardSkeleton />,
+});
 
 export default function LanyardSection() {
   return (

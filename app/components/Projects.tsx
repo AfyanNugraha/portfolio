@@ -35,13 +35,18 @@ export default function Projects() {
                 {/* Media preview: custom image or aesthetic DFIR fallback */}
                 <div className="relative w-full h-40 mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 flex items-center justify-center group-hover:border-zinc-700 transition-colors">
                   {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={`Screenshot proyek ${item.title}`}
-                      fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                      className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <>
+                      {/* Shimmer di belakang gambar — otomatis tertutup
+                          saat <Image> selesai dimuat (tanpa JS) */}
+                      <div className="absolute inset-0 skeleton" aria-hidden />
+                      <Image
+                        src={item.image}
+                        alt={`Screenshot proyek ${item.title}`}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </>
                   ) : (
                     <div className="w-full h-full p-4 flex flex-col justify-between relative overflow-hidden">
                       <div
