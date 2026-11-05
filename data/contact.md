@@ -1,4 +1,4 @@
-<!-- Section 05 / Contact — format daftar: Label | Tampilan | Link -->
+<!-- Section 06 / Contact — format daftar: Label | Tampilan | Link -->
 
 # Contact
 

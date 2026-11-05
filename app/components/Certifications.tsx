@@ -44,7 +44,7 @@ export default function Certifications() {
     >
       <div className="max-w-5xl mx-auto px-6">
         <SectionHeader
-          number="04"
+          number="05"
           label={header.label}
           meta={header.meta}
           title={header.title}

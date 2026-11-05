@@ -1,4 +1,4 @@
-<!-- Section 04 / Certifications — file PDF harus ada di public/certs/ -->
+<!-- Section 05 / Certifications — file PDF harus ada di public/certs/ -->
 
 # Certifications
 

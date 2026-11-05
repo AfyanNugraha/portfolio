@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 const SECTIONS = [
   { id: 'home', label: 'OVERVIEW' },
   { id: 'about', label: 'ABOUT' },
+  { id: 'skills', label: 'SKILLS' },
   { id: 'projects', label: 'PROJECTS' },
   { id: 'experience', label: 'EXPERIENCE' },
   { id: 'certifications', label: 'CERTIFICATIONS' },

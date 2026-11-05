@@ -12,7 +12,7 @@ export default function Experience() {
     <section id="experience" className="py-20 sm:py-32 bg-[#0a0a0a] border-t border-zinc-900">
       <div className="max-w-5xl mx-auto px-6">
         <SectionHeader
-          number="03"
+          number="04"
           label={header.label}
           meta={header.meta}
           title={header.title}

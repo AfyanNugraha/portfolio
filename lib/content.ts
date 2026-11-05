@@ -4,6 +4,7 @@ import experienceRaw from '@/data/experience.md';
 import projectsRaw from '@/data/projects.md';
 import certificationsRaw from '@/data/certifications.md';
 import contactRaw from '@/data/contact.md';
+import skillsRaw from '@/data/skills.md';
 
 /**
  * Parser markdown sederhana untuk file konten di folder `data/`.
@@ -178,6 +179,36 @@ export function getCerts() {
       desc: g.props.Deskripsi ?? '',
       date: g.props.Tanggal ?? '',
       pdf: g.props.File ?? '',
+    })),
+  };
+}
+
+/* ---------------- skills.md ---------------- */
+
+const skills = parseMd(skillsRaw);
+
+export type SkillItem = {
+  name: string;
+  /** Persentase 0–100 dari baris `Nama | Persentase | Icon`. */
+  level: number;
+  /** Nama ikon Lucide React (opsional). */
+  icon: string;
+};
+
+export function getSkills() {
+  return {
+    header: header(skills),
+    categories: skills.groups.map((g) => ({
+      title: g.title,
+      skills: g.items.map<SkillItem>((item) => {
+        const [name = '', levelRaw = '', icon = ''] = splitRow(item, 3);
+        const parsed = parseInt(levelRaw, 10);
+        return {
+          name,
+          level: Number.isNaN(parsed) ? 0 : Math.min(100, Math.max(0, parsed)),
+          icon,
+        };
+      }),
     })),
   };
 }

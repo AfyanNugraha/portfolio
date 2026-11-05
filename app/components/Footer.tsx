@@ -32,6 +32,7 @@ export default function Footer() {
             <h5 className="text-zinc-300 font-mono text-xs uppercase tracking-wider mb-4">Quick Links</h5>
             <div className="flex flex-col gap-2 text-sm text-zinc-400">
               <a href="#about" className="hover:text-blue-400 transition-colors">About</a>
+              <a href="#skills" className="hover:text-blue-400 transition-colors">Skills</a>
               <a href="#projects" className="hover:text-blue-400 transition-colors">Projects</a>
               <a href="#certifications" className="hover:text-blue-400 transition-colors">Certs</a>
             </div>

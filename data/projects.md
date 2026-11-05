@@ -1,4 +1,4 @@
-<!-- Section 02 / Projects — nomor urut kartu dibuat otomatis (01, 02, ...) -->
+<!-- Section 03 / Projects — nomor urut kartu dibuat otomatis (01, 02, ...) -->
 <!-- Opsi Gambar: isi path seperti `/projects/volatility.png` atau hapus baris Gambar jika belum ada screenshot -->
 
 # Projects

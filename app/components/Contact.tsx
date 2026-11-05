@@ -11,7 +11,7 @@ export default function Contact() {
     <section id="contact" className="py-20 sm:py-32 bg-[#0d0d0d] border-t border-zinc-900">
       <div className="max-w-5xl mx-auto px-6">
         <SectionHeader
-          number="05"
+          number="06"
           label={header.label}
           meta={header.meta}
           title={header.title}
