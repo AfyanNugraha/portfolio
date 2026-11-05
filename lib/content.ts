@@ -96,6 +96,19 @@ function splitRow(item: string, parts: number): string[] {
   return item.split('|').map((s) => s.trim()).slice(0, parts);
 }
 
+/**
+ * Ekstrak peran dari field `Profesi` di profile.md.
+ * Format: "...software engineering - CySec Analyst/DFIR - Software Developer"
+ * Hasil: "CySec Analyst/DFIR / Software Developer" (fallback: Profesi penuh).
+ */
+export function professionRoles(profession: string): string {
+  const parts = profession
+    .split(' - ')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return (parts.length > 1 ? parts.slice(1) : parts).join(' / ');
+}
+
 /* ---------------- profile.md ---------------- */
 
 const profile = parseMd(profileRaw);
