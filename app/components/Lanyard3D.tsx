@@ -9,13 +9,13 @@ import * as THREE from 'three';
 const N = 24;                 // ditambah untuk panjang lebih
 const SEG = 0.05;             // panjang segmen
 const GRAV = -9.8;             // gravitasi realistis (m/s^2 setara dunia nyata)
-const DAMP = 0.991;           // redaman lebih natural (tidak terlalu cepat berhenti, tidak berlebihan)
+const DAMP = 0.985;           // redaman ditingkatkan agar ayunan lebih cepat tenang
 const ITER = 12;              // perbanyak iterasi agar kaku & rigid seperti pita kain asli
 const DT = 1 / 60;            // langkah waktu tetap
 const ANCHOR_Y = 1.74;        // posisi anchor (atas layar) setelah jatuh
 const START_Y = 4.2;          // posisi anchor sebelum jatuh (di luar layar)
 const DROP_DELAY = 0.1;        // jeda sangat singkat
-const DROP_DUR = 0.6;          // durasi jatuh dipercepat — selesai cepat
+const DROP_DUR = 0.95;         // durasi jatuh diperlama agar lebih elegan
 const CARD_W = 0.8;
 const CARD_H = 1.15;
 const CARD_D = 0.03;
@@ -34,8 +34,13 @@ type Shared = {
   hits: THREE.Object3D[];  // mesh yang bisa di-hit untuk mulai drag
 };
 
-function easeOutQuad(x: number) {
-  return 1 - (1 - x) * (1 - x);
+function easeInOutCubic(x: number) {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+function smoothstep(min: number, max: number, value: number) {
+  const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  return x * x * (3 - 2 * x);
 }
 
 /* ---------------- Tekstur ---------------- */
@@ -163,8 +168,10 @@ function Scene({
     () =>
       Array.from({ length: N }, (_, i) => {
         const progress = i / (N - 1);
-        const xOffset = Math.sin((progress * Math.PI) / 2) * 0.85;
-        const yPos = ANCHOR_Y - (i * SEG * 0.4);
+        // Offset horizontal dikurangi agar tidak terlalu miring di awal
+        const xOffset = Math.sin((progress * Math.PI) / 2) * 0.2;
+        // Mulai dari START_Y dengan jarak segmen alami
+        const yPos = START_Y - i * SEG;
         return {
           pos: new THREE.Vector3(xOffset, yPos, 0),
           prev: new THREE.Vector3(xOffset, yPos, 0),
@@ -249,19 +256,30 @@ function Scene({
     if (t < DROP_DELAY) return START_Y;
     if (t < DROP_DELAY + DROP_DUR) {
       const p = (t - DROP_DELAY) / DROP_DUR;
-      return START_Y + (ANCHOR_Y - START_Y) * easeOutQuad(p);
+      return START_Y + (ANCHOR_Y - START_Y) * easeInOutCubic(p);
     }
-    return ANCHOR_Y + Math.sin(t * 0.9) * 0.012;
+    return ANCHOR_Y + Math.sin(t * 0.7) * 0.008;
   }
 
   function step(t: number) {
     const dragging = shared.drag;
     // anchor (titik paling atas, menempel navbar)
-    const ax = t > DROP_DELAY + DROP_DUR ? Math.sin(t * 0.6) * 0.02 : 0;
+    const ax = t > DROP_DELAY + DROP_DUR ? Math.sin(t * 0.5) * 0.015 : 0;
     P[0].pos.set(ax, anchorY(t), 0);
     P[0].prev.copy(P[0].pos);
 
-    const windMul = t > DROP_DELAY + DROP_DUR ? 1 : 0;
+    // Warm-up / inisialisasi awal agar tidak ada sentakan di awal drop
+    if (t < DROP_DELAY + 0.05) {
+      for (let i = 1; i < N; i++) {
+        P[i].prev.copy(P[i].pos);
+      }
+      return;
+    }
+
+    // Angin di-fade-in perlahan setelah selesai jatuh agar tidak menendang
+    const dropEndTime = DROP_DELAY + DROP_DUR;
+    const windMul = t > dropEndTime ? smoothstep(dropEndTime, dropEndTime + 1.2, t) * 0.35 : 0;
+
     for (let i = 1; i < N; i++) {
       if (dragging && i === N - 1) continue;
       const p = P[i].pos;
@@ -270,9 +288,9 @@ function Scene({
       let vy = (p.y - pr.y) * DAMP;
       let vz = (p.z - pr.z) * DAMP;
 
-      // Batasi kecepatan per frame agar simulasi stabil & tidak jittering
+      // Batasi kecepatan per frame agar simulasi halus & tidak jittering
       const speed = Math.hypot(vx, vy, vz);
-      const maxV = 0.12;
+      const maxV = 0.05;
       if (speed > maxV) {
         const ratio = maxV / speed;
         vx *= ratio;
@@ -281,12 +299,12 @@ function Scene({
       }
 
       pr.copy(p);
-      const fx = windMul * Math.sin(t * 1.1 + i * 0.25) * 0.1;
-      const fz = windMul * Math.sin(t * 0.75 + i * 0.4) * 0.05;
+      const fx = windMul * Math.sin(t * 0.9 + i * 0.25) * 0.04;
+      const fz = windMul * Math.sin(t * 0.6 + i * 0.4) * 0.02;
       p.x += vx + fx * DT * DT;
       p.y += vy + GRAV * DT * DT;
       p.z += vz + fz * DT * DT;
-      p.z = THREE.MathUtils.clamp(p.z, -1.2, 1.2);
+      p.z = THREE.MathUtils.clamp(p.z, -0.8, 0.8);
     }
 
     // ujung bawah tali dipegang user
@@ -362,17 +380,18 @@ function Scene({
       cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2);
       tmpUp.copy(tmpD).negate();
       quat.setFromUnitVectors(UP, tmpUp);
-      cardRef.current.quaternion.copy(quat);
+      // Slerp rotasi kartu agar perpindahan orientasi lebih halus
+      cardRef.current.quaternion.slerp(quat, 0.35);
     }
     if (tiltRef.current) {
       const velX = T.x - P[N - 1].prev.x;
       const velY = T.y - P[N - 1].prev.y;
-      const twist = THREE.MathUtils.clamp(-velX * 0.8, -0.15, 0.15);
-      const pitch = THREE.MathUtils.clamp(velY * 0.4, -0.12, 0.12);
+      const twist = THREE.MathUtils.clamp(-velX * 0.45, -0.08, 0.08);
+      const pitch = THREE.MathUtils.clamp(velY * 0.22, -0.07, 0.07);
       const tx = -shared.ndc.y * 0.12 + pitch;
       const ty = shared.ndc.x * 0.18 + twist;
-      tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.12;
-      tiltRef.current.rotation.y += (ty - tiltRef.current.rotation.y) * 0.12;
+      tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.08;
+      tiltRef.current.rotation.y += (ty - tiltRef.current.rotation.y) * 0.08;
     }
   }
 
