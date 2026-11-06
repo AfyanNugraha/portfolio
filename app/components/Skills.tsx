@@ -7,14 +7,21 @@ import {
   ArrowLeft,
   ArrowRight,
   Atom,
+  Binary,
   Box,
+  Bug,
   Code,
   CodeXml,
   Cpu,
   FileCode,
+  FileSearch,
   GitBranch,
   Hexagon,
+  Network,
   Palette,
+  Radar,
+  Siren,
+  Terminal,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -26,14 +33,21 @@ const { header, categories } = getSkills();
 /** Nama ikon dari data/skills.md → komponen Lucide. Fallback: Wrench. */
 const ICONS: Record<string, LucideIcon> = {
   Atom,
+  Binary,
   Box,
+  Bug,
   Code,
   CodeXml,
   Cpu,
   FileCode,
+  FileSearch,
   GitBranch,
   Hexagon,
+  Network,
   Palette,
+  Radar,
+  Siren,
+  Terminal,
 };
 
 function iconFor(name: string): LucideIcon {
