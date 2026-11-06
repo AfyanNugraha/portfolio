@@ -9,18 +9,19 @@ import * as THREE from 'three';
 const N = 24;                 // ditambah untuk panjang lebih
 const SEG = 0.05;             // panjang segmen
 const GRAV = -9.8;             // gravitasi realistis (m/s^2 setara dunia nyata)
-const DAMP = 0.993;           // redaman ringan — ayunan natural meredam perlahan seperti fisika nyata
+const DAMP = 0.991;           // redaman lebih natural (tidak terlalu cepat berhenti, tidak berlebihan)
 const ITER = 12;              // perbanyak iterasi agar kaku & rigid seperti pita kain asli
 const DT = 1 / 60;            // langkah waktu tetap
 const ANCHOR_Y = 1.74;        // posisi anchor (atas layar) setelah jatuh
 const START_Y = 4.2;          // posisi anchor sebelum jatuh (di luar layar)
 const DROP_DELAY = 0.1;        // jeda sangat singkat
-const DROP_DUR = 0.95;         // durasi jatuh diperlama agar lebih elegan
+const DROP_DUR = 0.6;          // durasi jatuh dipercepat — selesai cepat
 const CARD_W = 0.8;
 const CARD_H = 1.15;
 const CARD_D = 0.03;
 const HALF_W = 0.075;         // setengah lebar pita tali (diperlebar dari 0.03)
 
+const UP = new THREE.Vector3(0, 1, 0);
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 
 type Shared = {
@@ -33,13 +34,8 @@ type Shared = {
   hits: THREE.Object3D[];  // mesh yang bisa di-hit untuk mulai drag
 };
 
-function easeInOutCubic(x: number) {
-  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-}
-
-function smoothstep(min: number, max: number, value: number) {
-  const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-  return x * x * (3 - 2 * x);
+function easeOutQuad(x: number) {
+  return 1 - (1 - x) * (1 - x);
 }
 
 /* ---------------- Tekstur ---------------- */
@@ -167,10 +163,8 @@ function Scene({
     () =>
       Array.from({ length: N }, (_, i) => {
         const progress = i / (N - 1);
-        // Offset horizontal dikurangi agar tidak terlalu miring di awal
-        const xOffset = Math.sin((progress * Math.PI) / 2) * 0.2;
-        // Mulai dari START_Y dengan jarak segmen alami
-        const yPos = START_Y - i * SEG;
+        const xOffset = Math.sin((progress * Math.PI) / 2) * 0.85;
+        const yPos = ANCHOR_Y - (i * SEG * 0.4);
         return {
           pos: new THREE.Vector3(xOffset, yPos, 0),
           prev: new THREE.Vector3(xOffset, yPos, 0),
@@ -250,41 +244,24 @@ function Scene({
   const tmpSide = new THREE.Vector3();
   const tmpTan = new THREE.Vector3();
   const quat = new THREE.Quaternion();
-  // Low-pass velocity kartu (dipakai untuk tilt) — menekan noise osilasi
-  const velSmooth = new THREE.Vector2();
-  // State orientasi: yaw halus (anti-flip), gain tilt mulus, deteksi release
-  const yawSmooth = useRef(0);
-  const tiltGainSmooth = useRef(0);
-  const wasDragging = useRef(false);
 
   function anchorY(t: number) {
     if (t < DROP_DELAY) return START_Y;
     if (t < DROP_DELAY + DROP_DUR) {
       const p = (t - DROP_DELAY) / DROP_DUR;
-      return START_Y + (ANCHOR_Y - START_Y) * easeInOutCubic(p);
+      return START_Y + (ANCHOR_Y - START_Y) * easeOutQuad(p);
     }
-    return ANCHOR_Y + Math.sin(t * 0.7) * 0.008;
+    return ANCHOR_Y + Math.sin(t * 0.9) * 0.012;
   }
 
   function step(t: number) {
     const dragging = shared.drag;
     // anchor (titik paling atas, menempel navbar)
-    const ax = t > DROP_DELAY + DROP_DUR ? Math.sin(t * 0.5) * 0.015 : 0;
+    const ax = t > DROP_DELAY + DROP_DUR ? Math.sin(t * 0.6) * 0.02 : 0;
     P[0].pos.set(ax, anchorY(t), 0);
     P[0].prev.copy(P[0].pos);
 
-    // Warm-up / inisialisasi awal agar tidak ada sentakan di awal drop
-    if (t < DROP_DELAY + 0.05) {
-      for (let i = 1; i < N; i++) {
-        P[i].prev.copy(P[i].pos);
-      }
-      return;
-    }
-
-    // Angin di-fade-in perlahan setelah selesai jatuh agar tidak menendang
-    const dropEndTime = DROP_DELAY + DROP_DUR;
-    const windMul = t > dropEndTime ? smoothstep(dropEndTime, dropEndTime + 1.2, t) * 0.35 : 0;
-
+    const windMul = t > DROP_DELAY + DROP_DUR ? 1 : 0;
     for (let i = 1; i < N; i++) {
       if (dragging && i === N - 1) continue;
       const p = P[i].pos;
@@ -293,8 +270,7 @@ function Scene({
       let vy = (p.y - pr.y) * DAMP;
       let vz = (p.z - pr.z) * DAMP;
 
-      // Batasi kecepatan per frame — mencegah ledakan numerik,
-      // tidak membatasi ayunan normal (pendulum alami < 0.12)
+      // Batasi kecepatan per frame agar simulasi stabil & tidak jittering
       const speed = Math.hypot(vx, vy, vz);
       const maxV = 0.12;
       if (speed > maxV) {
@@ -305,36 +281,29 @@ function Scene({
       }
 
       pr.copy(p);
-      const fx = windMul * Math.sin(t * 0.9 + i * 0.25) * 0.04;
-      const fz = windMul * Math.sin(t * 0.6 + i * 0.4) * 0.02;
+      const fx = windMul * Math.sin(t * 1.1 + i * 0.25) * 0.1;
+      const fz = windMul * Math.sin(t * 0.75 + i * 0.4) * 0.05;
       p.x += vx + fx * DT * DT;
       p.y += vy + GRAV * DT * DT;
       p.z += vz + fz * DT * DT;
-      p.z = THREE.MathUtils.clamp(p.z, -0.8, 0.8);
+      p.z = THREE.MathUtils.clamp(p.z, -1.2, 1.2);
     }
 
     // ujung bawah tali dipegang user
     if (dragging) {
       const tn = P[N - 1];
       tmpD.subVectors(shared.target, tn.pos);
-      // Damping drag ringan — kartu mengikuti tangan tapi tetap ada bobot
-      const dragDamp = 0.96;
-      tn.prev.copy(tn.pos).addScaledVector(tmpD.subVectors(tn.pos, tn.prev), dragDamp);
-      tn.pos.addScaledVector(tmpD.subVectors(shared.target, tn.pos), 0.4);
+      // Simpan posisi sebelumnya agar kecepatan rilis realistis & tidak tersentak
+      tn.prev.copy(tn.pos);
+      tn.pos.addScaledVector(tmpD, 0.5);
 
-      // Limit kecepatan drag (mencegah snap, tapi tetap responsif)
+      // Redam lonjakan kecepatan instan (anti-glitch / anti-snap)
       const v = tmpD.subVectors(tn.pos, tn.prev);
-      const maxSpeed = 0.1;
+      const maxSpeed = 0.08;
       if (v.length() > maxSpeed) {
         v.setLength(maxSpeed);
         tn.prev.copy(tn.pos).sub(v);
       }
-    } else {
-      // Saat dilepas: sebagian besar momentum dipertahankan seperti
-      // fisika nyata (pendulum berayun lalu meredam), hanya kelebihan
-      // energi dari snap yang dipangkas.
-      const tn = P[N - 1];
-      tn.prev.lerp(tn.pos, 0.25);
     }
 
     // constraint jarak antar titik (tali tidak melar)
@@ -360,14 +329,6 @@ function Scene({
   }
 
   function updateVisuals() {
-    // Deteksi transisi drag → lepas: reset velocity & ramp-in tilt
-    // agar tidak ada kick / lompatan orientasi tepat saat jari melepas.
-    if (wasDragging.current && !shared.drag) {
-      velSmooth.set(0, 0);
-      tiltGainSmooth.current = 0;
-    }
-    wasDragging.current = shared.drag;
-
     /* pita tali */
     const pos = ribbon.attributes.position.array as Float32Array;
     for (let i = 0; i < N; i++) {
@@ -398,51 +359,20 @@ function Scene({
     if (tmpD.lengthSq() < 1e-8) tmpD.set(0, -1, 0);
     tmpD.normalize();
     if (cardRef.current) {
-      // Posisikan cardRef agar ujung tali (T) masuk dan berakhir di dalam
-      // klip logam penjepit tali (crimp ferrule) di posisi CARD_H / 2 + 0.08
-      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2 + 0.08);
-      // Orientasi yaw 2D — kartu selalu menghadap kamera, tanpa ambiguitas flip.
-      // (setFromUnitVectors bisa berputar 180° mendadak saat arah tali berbalik)
+      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2);
       tmpUp.copy(tmpD).negate();
-      let sx = tmpUp.x;
-      let sy = tmpUp.y;
-      if (Math.abs(sx) < 1e-5 && Math.abs(sy) < 1e-5) {
-        sx = 0;
-        sy = 1;
-      }
-      const targetYaw = -Math.atan2(sx, sy);
-      // Unwrap sudut terpendek (hindari lompat ±2π saat melewati ±π)
-      let d = targetYaw - yawSmooth.current;
-      while (d > Math.PI) d -= Math.PI * 2;
-      while (d < -Math.PI) d += Math.PI * 2;
-      // Batasi kecepatan rotasi per frame — mencegah flip mendadak
-      d = THREE.MathUtils.clamp(d, -0.06, 0.06);
-      // Smoothing adaptif: responsif saat drag, lebih lembut saat bebas
-      yawSmooth.current += d * (shared.drag ? 0.35 : 0.18);
-      quat.setFromAxisAngle(Z_AXIS, yawSmooth.current);
+      quat.setFromUnitVectors(UP, tmpUp);
       cardRef.current.quaternion.copy(quat);
     }
     if (tiltRef.current) {
-      // Low-pass velocity agar tidak mengikuti noise osilasi constraint
-      const vx = T.x - P[N - 1].prev.x;
-      const vy = T.y - P[N - 1].prev.y;
-      velSmooth.x += (vx - velSmooth.x) * 0.3;
-      velSmooth.y += (vy - velSmooth.y) * 0.3;
-
-      // Tautness: jarak ujung tali vs SEG. Saat tali tegang (taut),
-      // kartu sudah mengikuti arah tali (yaw) → tilt ekstra ditekan.
-      const tautness = THREE.MathUtils.clamp(tmpD.length() / SEG, 0, 1);
-      const targetGain = 1 - smoothstep(0.82, 1.0, tautness);
-      // Low-pass gain → transisi tilt mulus, tidak melompat saat release
-      tiltGainSmooth.current += (targetGain - tiltGainSmooth.current) * 0.1;
-      const tiltGain = tiltGainSmooth.current;
-
-      const twist = THREE.MathUtils.clamp(-velSmooth.x * 0.4, -0.07, 0.07) * tiltGain;
-      const pitch = THREE.MathUtils.clamp(velSmooth.y * 0.2, -0.06, 0.06) * tiltGain;
-      const tx = -shared.ndc.y * 0.1 + pitch;
-      const ty = shared.ndc.x * 0.16 + twist;
-      tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.08;
-      tiltRef.current.rotation.y += (ty - tiltRef.current.rotation.y) * 0.08;
+      const velX = T.x - P[N - 1].prev.x;
+      const velY = T.y - P[N - 1].prev.y;
+      const twist = THREE.MathUtils.clamp(-velX * 0.8, -0.15, 0.15);
+      const pitch = THREE.MathUtils.clamp(velY * 0.4, -0.12, 0.12);
+      const tx = -shared.ndc.y * 0.12 + pitch;
+      const ty = shared.ndc.x * 0.18 + twist;
+      tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.12;
+      tiltRef.current.rotation.y += (ty - tiltRef.current.rotation.y) * 0.12;
     }
   }
 
@@ -488,22 +418,14 @@ function Scene({
 
       {/* kartu ID */}
       <group ref={cardRef}>
-        {/* 1. Klip logam penjepit ujung tali (crimp ferrule) — lebar 0.165 agar tali 0.15 masuk rapi */}
-        <mesh position={[0, CARD_H / 2 + 0.08, 0]}>
-          <boxGeometry args={[0.165, 0.06, 0.028]} />
-          <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.25} />
+        {/* klip + ring logam (ikut orientasi tali) — tali masuk ke dalam klip */}
+        <mesh position={[0, CARD_H / 2 - 0.02, 0]}>
+          <boxGeometry args={[0.1, 0.12, 0.04]} />
+          <meshStandardMaterial color="#aab2bd" metalness={0.85} roughness={0.32} />
         </mesh>
-
-        {/* 2. Ring logam penghubung antara penjepit tali dan kartu */}
-        <mesh position={[0, CARD_H / 2 + 0.035, 0]}>
-          <torusGeometry args={[0.024, 0.006, 12, 24]} />
-          <meshStandardMaterial color="#e2e8f0" metalness={0.95} roughness={0.2} />
-        </mesh>
-
-        {/* 3. Klip/tab pengait di tepi atas kartu */}
-        <mesh position={[0, CARD_H / 2, 0]}>
-          <boxGeometry args={[0.08, 0.035, 0.038]} />
-          <meshStandardMaterial color="#94a3b8" metalness={0.85} roughness={0.3} />
+        <mesh position={[0, CARD_H / 2 + 0.06, 0]}>
+          <torusGeometry args={[0.05, 0.012, 10, 20]} />
+          <meshStandardMaterial color="#b8c0cb" metalness={0.9} roughness={0.28} />
         </mesh>
 
         <group ref={tiltRef}>
