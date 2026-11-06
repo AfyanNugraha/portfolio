@@ -379,9 +379,9 @@ function Scene({
     if (tmpD.lengthSq() < 1e-8) tmpD.set(0, -1, 0);
     tmpD.normalize();
     if (cardRef.current) {
-      // Posisikan cardRef sedikit lebih ke atas (masuk ke dalam ujung tali)
-      // agar ujung pita/tali berakhir tepat di tengah klip logam (CARD_H / 2 - 0.02)
-      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2 - 0.02);
+      // Posisikan cardRef agar ujung tali (T) masuk dan berakhir di dalam
+      // klip logam penjepit tali (crimp ferrule) di posisi CARD_H / 2 + 0.08
+      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2 + 0.08);
       tmpUp.copy(tmpD).negate();
       quat.setFromUnitVectors(UP, tmpUp);
       // Slerp rotasi kartu agar perpindahan orientasi lebih halus
@@ -451,14 +451,22 @@ function Scene({
 
       {/* kartu ID */}
       <group ref={cardRef}>
-        {/* klip + ring logam (ikut orientasi tali) — tali masuk ke dalam klip */}
-        <mesh position={[0, CARD_H / 2 - 0.02, 0]}>
-          <boxGeometry args={[0.1, 0.12, 0.04]} />
-          <meshStandardMaterial color="#aab2bd" metalness={0.85} roughness={0.32} />
+        {/* 1. Klip logam penjepit ujung tali (crimp ferrule) — lebar 0.165 agar tali 0.15 masuk rapi */}
+        <mesh position={[0, CARD_H / 2 + 0.08, 0]}>
+          <boxGeometry args={[0.165, 0.06, 0.028]} />
+          <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.25} />
         </mesh>
-        <mesh position={[0, CARD_H / 2 + 0.06, 0]}>
-          <torusGeometry args={[0.05, 0.012, 10, 20]} />
-          <meshStandardMaterial color="#b8c0cb" metalness={0.9} roughness={0.28} />
+
+        {/* 2. Ring logam penghubung antara penjepit tali dan kartu */}
+        <mesh position={[0, CARD_H / 2 + 0.035, 0]}>
+          <torusGeometry args={[0.024, 0.006, 12, 24]} />
+          <meshStandardMaterial color="#e2e8f0" metalness={0.95} roughness={0.2} />
+        </mesh>
+
+        {/* 3. Klip/tab pengait di tepi atas kartu */}
+        <mesh position={[0, CARD_H / 2, 0]}>
+          <boxGeometry args={[0.08, 0.035, 0.038]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.85} roughness={0.3} />
         </mesh>
 
         <group ref={tiltRef}>
