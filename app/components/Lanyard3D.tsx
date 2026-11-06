@@ -251,6 +251,8 @@ function Scene({
   const tmpSide = new THREE.Vector3();
   const tmpTan = new THREE.Vector3();
   const quat = new THREE.Quaternion();
+  // Low-pass velocity kartu (dipakai untuk tilt) — menekan noise osilasi
+  const velSmooth = new THREE.Vector2();
 
   function anchorY(t: number) {
     if (t < DROP_DELAY) return START_Y;
@@ -384,10 +386,20 @@ function Scene({
       cardRef.current.quaternion.slerp(quat, 0.35);
     }
     if (tiltRef.current) {
-      const velX = T.x - P[N - 1].prev.x;
-      const velY = T.y - P[N - 1].prev.y;
-      const twist = THREE.MathUtils.clamp(-velX * 0.45, -0.08, 0.08);
-      const pitch = THREE.MathUtils.clamp(velY * 0.22, -0.07, 0.07);
+      // Low-pass velocity agar tidak mengikuti noise osilasi constraint
+      const vx = T.x - P[N - 1].prev.x;
+      const vy = T.y - P[N - 1].prev.y;
+      velSmooth.x += (vx - velSmooth.x) * 0.3;
+      velSmooth.y += (vy - velSmooth.y) * 0.3;
+
+      // Tautness: jarak ujung tali vs SEG. Saat tali tegang (taut),
+      // kartu sudah mengikuti arah tali (quaternion) → tilt ekstra
+      // ditekan agar tidak bergoyang liar. Saat longgar, boleh goyang.
+      const tautness = THREE.MathUtils.clamp(tmpD.length() / SEG, 0, 1);
+      const tiltGain = 1 - smoothstep(0.82, 1.0, tautness);
+
+      const twist = THREE.MathUtils.clamp(-velSmooth.x * 0.45, -0.08, 0.08) * tiltGain;
+      const pitch = THREE.MathUtils.clamp(velSmooth.y * 0.22, -0.07, 0.07) * tiltGain;
       const tx = -shared.ndc.y * 0.12 + pitch;
       const ty = shared.ndc.x * 0.18 + twist;
       tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.08;
