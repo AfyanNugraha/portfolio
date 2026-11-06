@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import ErrorBoundary from './ErrorBoundary';
@@ -15,11 +15,41 @@ const SKELETON_TIMEOUT = 8000;
 // siap (onReady dari Lanyard3D), bukan cuma sampai chunk selesai di-download.
 const Lanyard3D = dynamic(() => import('./Lanyard3D'), { ssr: false });
 
+/** Cek dukungan WebGL — device tanpa WebGL langsung pakai fallback statis. */
+function supportsWebGL(): boolean {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
 export default function LanyardSection() {
   const [ready, setReady] = useState(false);
   const [contextLost, setContextLost] = useState(false);
+  const [crashed, setCrashed] = useState(false);
   const [remountKey, setRemountKey] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // null = belum dicek; true = layak mount scene; false = pakai fallback statis
+  const [sceneOk, setSceneOk] = useState<boolean | null>(null);
+
+  // Preload foto + cek WebGL SEBELUM mount scene 3D:
+  // - WebGL tidak ada → fallback statis (tanpa mount Canvas sama sekali)
+  // - Foto gagal load → fallback statis (jangan mount scene tanpa foto)
+  useEffect(() => {
+    if (!supportsWebGL()) {
+      setSceneOk(false);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => setSceneOk(true);
+    img.onerror = () => setSceneOk(false);
+    img.src = '/id-card.jpeg';
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, []);
 
   // Jaring pengaman: kalau onReady/onError tidak pernah datang
   // (device aneh, WebGL aneh), skeleton tetap dilepas — jangan sampai
@@ -30,48 +60,17 @@ export default function LanyardSection() {
     return () => clearTimeout(t);
   }, [ready, contextLost]);
 
-  // Dengar WebGL context loss — terjadi di HP saat memory pressure,
-  // pindah app, atau refresh cepat. Daripada layar putih, tampilkan fallback statis.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const handleContextLost = (e: Event) => {
-      console.warn('[Lanyard3D] WebGL context lost');
-      e.preventDefault();
-      setContextLost(true);
-      setReady(true); // lepas skeleton supaya fallback kelihatan
-    };
-
-    const handleContextRestored = () => {
-      console.log('[Lanyard3D] WebGL context restored, remount canvas');
-      setContextLost(false);
-      setReady(false);
-      // trigger remount Canvas dengan key baru (clean state)
-      setRemountKey((k) => k + 1);
-    };
-
-    canvas.addEventListener('webglcontextlost', handleContextLost);
-    canvas.addEventListener('webglcontextrestored', handleContextRestored);
-
-    return () => {
-      canvas.removeEventListener('webglcontextlost', handleContextLost);
-      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
-    };
-  }, []);
+  // sceneOk === null && ready → timeout menembak sebelum cek preload selesai
+  // → tampilkan fallback dulu; kalau foto akhirnya load, scene mount dan
+  // fallback hilang (self-healing).
+  const showFallback =
+    contextLost || crashed || sceneOk === false || (sceneOk === null && ready);
+  const showScene = sceneOk === true;
 
   return (
     <section
       id="lanyard"
       className="relative min-h-screen w-full bg-[#0a0a0a] overflow-hidden"
-      ref={(el) => {
-        if (el) {
-          const canvas = el.querySelector('canvas');
-          if (canvas && canvas !== canvasRef.current) {
-            canvasRef.current = canvas;
-          }
-        }
-      }}
     >
       {/* subtle backdrop */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-950/15 via-transparent to-transparent pointer-events-none" />
@@ -83,29 +82,51 @@ export default function LanyardSection() {
         }}
       />
 
-      {/* Lanyard 3D interaktif — ErrorBoundary: fallback statis jika WebGL crash.
-          onError: crash = scene tak pernah siap → lepas skeleton langsung.
-          key={remountKey}: remount canvas saat context restore (clean state). */}
-      {!contextLost && (
+      {/* Lanyard 3D interaktif.
+          - sceneOk false → tidak pernah mount (WebGL/foto bermasalah).
+          - contextLost → scene TETAP ter-mount supaya event restore diterima;
+            canvas rusaknya ditutup fallback di bawah.
+          - crashed (JS error) → ErrorBoundary unmount, fallback statis.
+          - key={remountKey} → remount scene bersih saat context restore. */}
+      {showScene && !crashed && (
         <ErrorBoundary
           name="Lanyard3D"
           fallback={<LanyardFallback />}
           onError={() => {
             setReady(true);
-            setContextLost(true);
+            setCrashed(true);
           }}
         >
-          <Lanyard3D key={remountKey} onReady={() => setReady(true)} />
+          <Lanyard3D
+            key={remountKey}
+            onReady={() => setReady(true)}
+            onContextLost={() => {
+              console.warn('[Lanyard3D] WebGL context lost');
+              setContextLost(true);
+              setReady(true); // lepas skeleton supaya fallback kelihatan
+            }}
+            onContextRestored={() => {
+              console.log('[Lanyard3D] WebGL context restored, remount');
+              setContextLost(false);
+              setReady(false); // skeleton tampil sebentar saat remount
+              setRemountKey((k) => k + 1); // scene baru, state bersih
+            }}
+          />
         </ErrorBoundary>
       )}
 
-      {/* Context loss fallback — tampil saat GPU context hilang (putih/blank tidak terlihat). */}
-      {contextLost && <LanyardFallback />}
+      {/* Fallback statis — menutup canvas saat context lost, atau menggantikan
+          scene sepenuhnya saat WebGL/foto tidak layak / scene crash. */}
+      {showFallback && (
+        <div className="absolute inset-0 z-20">
+          <LanyardFallback />
+        </div>
+      )}
 
-      {/* Skeleton menutup section dari HTML awal sampai frame pertama 3D
-          dirender, lalu fade-out 0.4s — tanpa celah blank di antaranya. */}
+      {/* Skeleton menutup section dari HTML awal sampai scene 3D benar-benar
+          siap (onReady), lalu fade-out 0.4s — tanpa celah blank di antaranya. */}
       <AnimatePresence>
-        {!ready && !contextLost && (
+        {!ready && !showFallback && (
           <motion.div
             key="lanyard-skeleton"
             className="absolute inset-0 z-10 pointer-events-none"

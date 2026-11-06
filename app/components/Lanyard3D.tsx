@@ -458,7 +458,15 @@ function Scene({
 }
 
 /* ---------------- Host: canvas + area interaksi ---------------- */
-export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
+export default function Lanyard3D({
+  onReady,
+  onContextLost,
+  onContextRestored,
+}: {
+  onReady?: () => void;
+  onContextLost?: () => void;
+  onContextRestored?: () => void;
+}) {
   const sharedRef = useRef<Shared>({
     drag: false,
     target: new THREE.Vector3(0, ANCHOR_Y - N * SEG, 0),
@@ -473,6 +481,35 @@ export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
   // Deteksi device type — mobile cukup DPR 1 atau 1.5; desktop 1-2
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const dprMax = isMobile ? 1.5 : 2;
+
+  // Ref: prop callback inline — jangan bergantung pada identity-nya.
+  const ctxLostRef = useRef(onContextLost);
+  ctxLostRef.current = onContextLost;
+  const ctxRestoredRef = useRef(onContextRestored);
+  ctxRestoredRef.current = onContextRestored;
+
+  // Pasang listener context loss langsung di canvas saat renderer dibuat
+  // (onCreated → canvas pasti sudah ada; memasang di parent berisiko
+  // keburu jalan sebelum dynamic import selesai, lalu tidak terpasang).
+  // three.js sudah preventDefault + re-init sendiri saat restore — di sini
+  // kita hanya melapor ke parent supaya fallback statis bisa tampil.
+  const onCreated = ({ gl }: { gl: THREE.WebGLRenderer }) => {
+    const el = gl.domElement;
+    el.addEventListener(
+      'webglcontextlost',
+      () => {
+        ctxLostRef.current?.();
+      },
+      false
+    );
+    el.addEventListener(
+      'webglcontextrestored',
+      () => {
+        ctxRestoredRef.current?.();
+      },
+      false
+    );
+  };
 
   const ray = useMemo(() => new THREE.Raycaster(), []);
   const ndcVec = useMemo(() => new THREE.Vector2(), []);
@@ -529,6 +566,7 @@ export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
         camera={{ position: [0, 0, 4.2], fov: 45 }}
         gl={{ antialias: !isMobile, alpha: true }}
         dpr={[1, dprMax]}
+        onCreated={onCreated}
       >
         <Suspense fallback={null}>
           <Scene shared={sharedRef.current} onReady={onReady} />
