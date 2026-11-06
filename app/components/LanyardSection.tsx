@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import ErrorBoundary from './ErrorBoundary';
@@ -50,6 +50,7 @@ export default function LanyardSection() {
         retryCountRef.current++;
         setTimeout(check, 300);
       } else {
+        console.warn('[LanyardSection] WebGL not supported after 3 retries');
         setSceneOk(false);
       }
     };
@@ -59,10 +60,31 @@ export default function LanyardSection() {
     };
   }, []);
 
-  // Jaring pengaman: kalau onReady tidak pernah datang
+  // Preload foto & cek akses (walaupun Scene juga muat lewat useLoader, preload ini
+  // untuk early detection kegagalan dan menghindari Suspense yang terlalu lama)
+  useEffect(() => {
+    if (sceneOk !== true) return;
+    const img = new Image();
+    img.onload = () => console.log('[LanyardSection] Photo preload OK');
+    img.onerror = () => {
+      console.warn('[LanyardSection] Photo preload failed');
+      setSceneOk(false);
+    };
+    img.src = '/id-card.jpeg';
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [sceneOk]);
+
+  // Jaring pengaman: kalau onReady tidak pernah datang, lepas skeleton
+  // Timeout diperpendek ke 4s untuk mobile yang lambat load
   useEffect(() => {
     if (ready || contextLost) return;
-    const t = setTimeout(() => setReady(true), SKELETON_TIMEOUT);
+    const t = setTimeout(() => {
+      console.warn('[LanyardSection] Scene took >4s, forcing fallback');
+      setReady(true);
+    }, 4000);
     return () => clearTimeout(t);
   }, [ready, contextLost]);
 
@@ -110,26 +132,32 @@ export default function LanyardSection() {
         <ErrorBoundary
           name="Lanyard3D"
           fallback={<LanyardFallback />}
-          onError={() => {
+          onError={(err) => {
+            console.error('[Lanyard3D] Error:', err);
             setReady(true);
             setCrashed(true);
           }}
         >
-          <Lanyard3D
-            key={remountKey}
-            onReady={() => setReady(true)}
-            onContextLost={() => {
-              console.warn('[Lanyard3D] WebGL context lost');
-              setContextLost(true);
-              setReady(true); // lepas skeleton supaya fallback kelihatan
-            }}
-            onContextRestored={() => {
-              console.log('[Lanyard3D] WebGL context restored, remount');
-              setContextLost(false);
-              setReady(false); // skeleton tampil sebentar saat remount
-              setRemountKey((k) => k + 1); // scene baru, state bersih
-            }}
-          />
+          <Suspense fallback={<LanyardSkeleton />}>
+            <Lanyard3D
+              key={remountKey}
+              onReady={() => {
+                console.log('[Lanyard3D] Scene ready');
+                setReady(true);
+              }}
+              onContextLost={() => {
+                console.warn('[Lanyard3D] WebGL context lost');
+                setContextLost(true);
+                setReady(true);
+              }}
+              onContextRestored={() => {
+                console.log('[Lanyard3D] WebGL context restored, remount');
+                setContextLost(false);
+                setReady(false);
+                setRemountKey((k) => k + 1);
+              }}
+            />
+          </Suspense>
         </ErrorBoundary>
       )}
 
