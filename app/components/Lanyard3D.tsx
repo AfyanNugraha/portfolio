@@ -21,7 +21,6 @@ const CARD_H = 1.15;
 const CARD_D = 0.03;
 const HALF_W = 0.075;         // setengah lebar pita tali (diperlebar dari 0.03)
 
-const UP = new THREE.Vector3(0, 1, 0);
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 
 type Shared = {
@@ -253,6 +252,10 @@ function Scene({
   const quat = new THREE.Quaternion();
   // Low-pass velocity kartu (dipakai untuk tilt) — menekan noise osilasi
   const velSmooth = new THREE.Vector2();
+  // State orientasi: yaw halus (anti-flip), gain tilt mulus, deteksi release
+  const yawSmooth = useRef(0);
+  const tiltGainSmooth = useRef(0);
+  const wasDragging = useRef(false);
 
   function anchorY(t: number) {
     if (t < DROP_DELAY) return START_Y;
@@ -357,6 +360,14 @@ function Scene({
   }
 
   function updateVisuals() {
+    // Deteksi transisi drag → lepas: reset velocity & ramp-in tilt
+    // agar tidak ada kick / lompatan orientasi tepat saat jari melepas.
+    if (wasDragging.current && !shared.drag) {
+      velSmooth.set(0, 0);
+      tiltGainSmooth.current = 0;
+    }
+    wasDragging.current = shared.drag;
+
     /* pita tali */
     const pos = ribbon.attributes.position.array as Float32Array;
     for (let i = 0; i < N; i++) {
@@ -390,10 +401,26 @@ function Scene({
       // Posisikan cardRef agar ujung tali (T) masuk dan berakhir di dalam
       // klip logam penjepit tali (crimp ferrule) di posisi CARD_H / 2 + 0.08
       cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2 + 0.08);
+      // Orientasi yaw 2D — kartu selalu menghadap kamera, tanpa ambiguitas flip.
+      // (setFromUnitVectors bisa berputar 180° mendadak saat arah tali berbalik)
       tmpUp.copy(tmpD).negate();
-      quat.setFromUnitVectors(UP, tmpUp);
-      // Slerp rotasi kartu agar perpindahan orientasi lebih halus
-      cardRef.current.quaternion.slerp(quat, 0.35);
+      let sx = tmpUp.x;
+      let sy = tmpUp.y;
+      if (Math.abs(sx) < 1e-5 && Math.abs(sy) < 1e-5) {
+        sx = 0;
+        sy = 1;
+      }
+      const targetYaw = -Math.atan2(sx, sy);
+      // Unwrap sudut terpendek (hindari lompat ±2π saat melewati ±π)
+      let d = targetYaw - yawSmooth.current;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      // Batasi kecepatan rotasi per frame — mencegah flip mendadak
+      d = THREE.MathUtils.clamp(d, -0.06, 0.06);
+      // Smoothing adaptif: responsif saat drag, lebih lembut saat bebas
+      yawSmooth.current += d * (shared.drag ? 0.35 : 0.18);
+      quat.setFromAxisAngle(Z_AXIS, yawSmooth.current);
+      cardRef.current.quaternion.copy(quat);
     }
     if (tiltRef.current) {
       // Low-pass velocity agar tidak mengikuti noise osilasi constraint
@@ -403,15 +430,17 @@ function Scene({
       velSmooth.y += (vy - velSmooth.y) * 0.3;
 
       // Tautness: jarak ujung tali vs SEG. Saat tali tegang (taut),
-      // kartu sudah mengikuti arah tali (quaternion) → tilt ekstra
-      // ditekan agar tidak bergoyang liar. Saat longgar, boleh goyang.
+      // kartu sudah mengikuti arah tali (yaw) → tilt ekstra ditekan.
       const tautness = THREE.MathUtils.clamp(tmpD.length() / SEG, 0, 1);
-      const tiltGain = 1 - smoothstep(0.82, 1.0, tautness);
+      const targetGain = 1 - smoothstep(0.82, 1.0, tautness);
+      // Low-pass gain → transisi tilt mulus, tidak melompat saat release
+      tiltGainSmooth.current += (targetGain - tiltGainSmooth.current) * 0.1;
+      const tiltGain = tiltGainSmooth.current;
 
-      const twist = THREE.MathUtils.clamp(-velSmooth.x * 0.45, -0.08, 0.08) * tiltGain;
-      const pitch = THREE.MathUtils.clamp(velSmooth.y * 0.22, -0.07, 0.07) * tiltGain;
-      const tx = -shared.ndc.y * 0.12 + pitch;
-      const ty = shared.ndc.x * 0.18 + twist;
+      const twist = THREE.MathUtils.clamp(-velSmooth.x * 0.4, -0.07, 0.07) * tiltGain;
+      const pitch = THREE.MathUtils.clamp(velSmooth.y * 0.2, -0.06, 0.06) * tiltGain;
+      const tx = -shared.ndc.y * 0.1 + pitch;
+      const ty = shared.ndc.x * 0.16 + twist;
       tiltRef.current.rotation.x += (tx - tiltRef.current.rotation.x) * 0.08;
       tiltRef.current.rotation.y += (ty - tiltRef.current.rotation.y) * 0.08;
     }
