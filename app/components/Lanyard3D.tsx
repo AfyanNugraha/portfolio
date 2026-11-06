@@ -89,12 +89,25 @@ function makeCardTexture(photo: THREE.Texture) {
   const ctx = c.getContext('2d')!;
   ctx.fillStyle = '#081020';
   ctx.fillRect(0, 0, W, H);
-  if (img && img.width) {
+  
+  // Guard: cek apakah image benar-benar berhasil load
+  // (img.width > 0 berarti <img> sudah dimuat; width === 0 = gagal/belum)
+  if (img && img.width > 0) {
     const s = Math.max(W / img.width, H / img.height);
     const w = img.width * s;
     const h = img.height * s;
     ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  } else {
+    // Fallback: foto tidak ada / gagal load — render placeholder teks
+    ctx.fillStyle = 'rgba(100,100,120,0.3)';
+    ctx.fillRect(50, 50, W - 100, H / 2 - 100);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = '32px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('[photo]', W / 2, H / 4 + 40);
   }
+  
   // label bawah
   const barH = 104;
   const barY = H - barH;
@@ -383,11 +396,14 @@ function Scene({
       <directionalLight position={[-3, -1, 2]} intensity={0.5} color="#60a5fa" />
       <pointLight position={[0, 0, 3]} intensity={6} distance={8} color="#dbeafe" />
 
-      <Environment resolution={64}>
-        <Lightformer form="rect" intensity={4} position={[0, 3, -4]} scale={[8, 4, 1]} color="#dbeafe" />
-        <Lightformer form="rect" intensity={2.5} position={[-4, 1, -3]} scale={[4, 6, 1]} color="#93c5fd" />
-        <Lightformer form="circle" intensity={3} position={[3, -2, -3]} scale={3} color="#ffffff" />
-      </Environment>
+      {/* Environment (PMREM) — hanya di desktop; di mobile lights saja cukup */}
+      {typeof window !== 'undefined' && window.innerWidth >= 768 && (
+        <Environment resolution={64}>
+          <Lightformer form="rect" intensity={4} position={[0, 3, -4]} scale={[8, 4, 1]} color="#dbeafe" />
+          <Lightformer form="rect" intensity={2.5} position={[-4, 1, -3]} scale={[4, 6, 1]} color="#93c5fd" />
+          <Lightformer form="circle" intensity={3} position={[3, -2, -3]} scale={3} color="#ffffff" />
+        </Environment>
+      )}
 
       {/* tali (pita 3D) */}
       <mesh geometry={ribbon} castShadow frustumCulled={false}>
@@ -454,6 +470,10 @@ export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
   });
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // Deteksi device type — mobile cukup DPR 1 atau 1.5; desktop 1-2
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const dprMax = isMobile ? 1.5 : 2;
+
   const ray = useMemo(() => new THREE.Raycaster(), []);
   const ndcVec = useMemo(() => new THREE.Vector2(), []);
   const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), []);
@@ -507,8 +527,8 @@ export default function Lanyard3D({ onReady }: { onReady?: () => void }) {
       <Canvas
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
         camera={{ position: [0, 0, 4.2], fov: 45 }}
-        gl={{ antialias: true, alpha: true }}
-        dpr={[1, 2]}
+        gl={{ antialias: !isMobile, alpha: true }}
+        dpr={[1, dprMax]}
       >
         <Suspense fallback={null}>
           <Scene shared={sharedRef.current} onReady={onReady} />
