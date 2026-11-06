@@ -313,17 +313,23 @@ function Scene({
     if (dragging) {
       const tn = P[N - 1];
       tmpD.subVectors(shared.target, tn.pos);
-      // Simpan posisi sebelumnya agar kecepatan rilis realistis & tidak tersentak
-      tn.prev.copy(tn.pos);
-      tn.pos.addScaledVector(tmpD, 0.5);
+      // Saat sedang drag, naikkan damping agar gerakan lebih terkontrol & energy dissipate lebih cepat
+      const dragDamp = 0.92;
+      tn.prev.copy(tn.pos).addScaledVector(tmpD.subVectors(tn.pos, tn.prev), dragDamp);
+      tn.pos.addScaledVector(tmpD.subVectors(shared.target, tn.pos), 0.4);
 
-      // Redam lonjakan kecepatan instan (anti-glitch / anti-snap)
+      // Limit kecepatan drag
       const v = tmpD.subVectors(tn.pos, tn.prev);
-      const maxSpeed = 0.08;
+      const maxSpeed = 0.06;
       if (v.length() > maxSpeed) {
         v.setLength(maxSpeed);
         tn.prev.copy(tn.pos).sub(v);
       }
+    } else {
+      // Saat drag dilepas, reset velocity pada ujung tali agar tidak ada bounce
+      // (realistic: saat release grip, momentum berkurang drastis karena friction)
+      const tn = P[N - 1];
+      tn.prev.lerp(tn.pos, 0.7);
     }
 
     // constraint jarak antar titik (tali tidak melar)
