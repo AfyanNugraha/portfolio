@@ -1,9 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import SectionHeader from './SectionHeader';
 import { getCerts } from '@/lib/content';
+
+// PDF di-render via pdf.js (canvas) — iframe tidak didukung Chrome Android.
+// ssr:false karena pdf.js butuh window/worker.
+const PdfViewer = dynamic(() => import('./PdfViewer'), { ssr: false });
 
 type Cert = {
   id: string;
@@ -21,7 +26,7 @@ export default function Certifications() {
   const [pdfLoading, setPdfLoading] = useState(true);
 
   // Reset skeleton tiap ganti sertifikat; timeout = jaring pengaman
-  // bila event load iframe PDF tidak pernah datang (browser tertentu).
+  // bila callback render pdf.js tidak pernah terpicu (PDF rusak, dsb).
   useEffect(() => {
     if (!active) return;
     setPdfLoading(true);
@@ -157,21 +162,18 @@ export default function Certifications() {
                 </button>
               </div>
 
-              {/* PDF viewer (lazy: only rendered while open) */}
+              {/* PDF viewer — pdf.js canvas, lazy saat modal terbuka */}
               <div
                 className="relative flex-1 min-h-0 bg-[#0a0a0a] select-none"
                 onContextMenu={(e) => e.preventDefault()}
               >
-                <iframe
-                  src={`${active.pdf}#toolbar=0&navpanes=0&statusbar=0`}
-                  title={active.title}
-                  className="w-full h-full border-0"
-                  style={{ minHeight: '60vh' }}
-                  onLoad={() => setPdfLoading(false)}
+                <PdfViewer
+                  file={active.pdf}
+                  onDone={() => setPdfLoading(false)}
                 />
 
-                {/* Skeleton halaman PDF — tampil sampai iframe load
-                    (atau maks 4 detik sebagai fallback) */}
+                {/* Skeleton halaman PDF — tampil sampai halaman pertama
+                    selesai dirender (atau maks 4 detik sebagai fallback) */}
                 {pdfLoading && (
                   <div
                     role="status"

@@ -9,7 +9,7 @@ import * as THREE from 'three';
 const N = 24;                 // ditambah untuk panjang lebih
 const SEG = 0.05;             // panjang segmen
 const GRAV = -9.8;             // gravitasi realistis (m/s^2 setara dunia nyata)
-const DAMP = 0.985;           // redaman ditingkatkan agar ayunan lebih cepat tenang
+const DAMP = 0.993;           // redaman ringan — ayunan natural meredam perlahan seperti fisika nyata
 const ITER = 12;              // perbanyak iterasi agar kaku & rigid seperti pita kain asli
 const DT = 1 / 60;            // langkah waktu tetap
 const ANCHOR_Y = 1.74;        // posisi anchor (atas layar) setelah jatuh
@@ -290,9 +290,10 @@ function Scene({
       let vy = (p.y - pr.y) * DAMP;
       let vz = (p.z - pr.z) * DAMP;
 
-      // Batasi kecepatan per frame agar simulasi halus & tidak jittering
+      // Batasi kecepatan per frame — mencegah ledakan numerik,
+      // tidak membatasi ayunan normal (pendulum alami < 0.12)
       const speed = Math.hypot(vx, vy, vz);
-      const maxV = 0.05;
+      const maxV = 0.12;
       if (speed > maxV) {
         const ratio = maxV / speed;
         vx *= ratio;
@@ -313,23 +314,24 @@ function Scene({
     if (dragging) {
       const tn = P[N - 1];
       tmpD.subVectors(shared.target, tn.pos);
-      // Saat sedang drag, naikkan damping agar gerakan lebih terkontrol & energy dissipate lebih cepat
-      const dragDamp = 0.92;
+      // Damping drag ringan — kartu mengikuti tangan tapi tetap ada bobot
+      const dragDamp = 0.96;
       tn.prev.copy(tn.pos).addScaledVector(tmpD.subVectors(tn.pos, tn.prev), dragDamp);
       tn.pos.addScaledVector(tmpD.subVectors(shared.target, tn.pos), 0.4);
 
-      // Limit kecepatan drag
+      // Limit kecepatan drag (mencegah snap, tapi tetap responsif)
       const v = tmpD.subVectors(tn.pos, tn.prev);
-      const maxSpeed = 0.06;
+      const maxSpeed = 0.1;
       if (v.length() > maxSpeed) {
         v.setLength(maxSpeed);
         tn.prev.copy(tn.pos).sub(v);
       }
     } else {
-      // Saat drag dilepas, reset velocity pada ujung tali agar tidak ada bounce
-      // (realistic: saat release grip, momentum berkurang drastis karena friction)
+      // Saat dilepas: sebagian besar momentum dipertahankan seperti
+      // fisika nyata (pendulum berayun lalu meredam), hanya kelebihan
+      // energi dari snap yang dipangkas.
       const tn = P[N - 1];
-      tn.prev.lerp(tn.pos, 0.7);
+      tn.prev.lerp(tn.pos, 0.25);
     }
 
     // constraint jarak antar titik (tali tidak melar)
