@@ -379,7 +379,9 @@ function Scene({
     if (tmpD.lengthSq() < 1e-8) tmpD.set(0, -1, 0);
     tmpD.normalize();
     if (cardRef.current) {
-      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2);
+      // Posisikan cardRef sedikit lebih ke atas (masuk ke dalam ujung tali)
+      // agar ujung pita/tali berakhir tepat di tengah klip logam (CARD_H / 2 - 0.02)
+      cardRef.current.position.copy(T).addScaledVector(tmpD, CARD_H / 2 - 0.02);
       tmpUp.copy(tmpD).negate();
       quat.setFromUnitVectors(UP, tmpUp);
       // Slerp rotasi kartu agar perpindahan orientasi lebih halus
