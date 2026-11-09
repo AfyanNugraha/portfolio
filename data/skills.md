@@ -9,25 +9,27 @@ Judul: Tools I work with. *Always expanding.*
 Deskripsi: Koleksi tools dan keahlian yang saya gunakan untuk security monitoring, incident response, digital forensics, dan pengembangan web — terus berkembang seiring pengalaman.
 
 ## Cybersecurity
-- SIEM (Splunk / Wazuh) | 75 | Radar
-- Incident Response | 70 | Siren
+- SIEM (Splunk / Wazuh) | 60 | Radar
+- Incident Response | 30 | Siren
 - Digital Forensics (DFIR) | 70 | FileSearch
-- Log Analysis | 75 | Terminal
-- Network Security | 65 | Network
-- Malware Analysis | 55 | Bug
-- Reverse Engineering | 25 | Binary
+- Log Analysis | 70 | Terminal
+- Network Security | 60 | Network
+- Malware Analysis | 40 | Bug
+- Reverse Engineering | 30 | Binary
 
 ## Frontend Development
-- Next.js | 70 | CodeXml
-- React | 65 | Atom
+- Next.js | 60 | CodeXml
+- React | 40 | Atom
 - TypeScript | 55 | FileCode
-- Tailwind CSS | 75 | Palette
+- Tailwind CSS | 60 | Palette
 
 ## Backend & Tools
-- Python | 40 | Code
+- MySQL / MariaDB | 70 | Database
+- PostgreSQL | 60 | Database
+- Python | 65 | Code
 - Git & GitHub | 60 | GitBranch
-- Node.js | 50 | Hexagon
+- Node.js | 55 | Hexagon
 
 ## Specialized
-- Three.js / R3F | 45 | Box
-- Arduino / IoT | 55 | Cpu
+- Three.js / R3F | 40 | Box
+- Arduino / IoT | 75 | Cpu
