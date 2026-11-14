@@ -47,9 +47,9 @@ export default function Navbar() {
         <nav
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          className={`pointer-events-auto flex items-center transition-all duration-500 ease-in-out h-12 overflow-hidden
+          className={`pointer-events-auto flex items-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] h-12 overflow-hidden
             bg-[#0d0d0d]/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8)]
-            ${isExpanded ? 'px-3 py-2 rounded-full gap-1' : 'w-12 h-12 px-0 py-0 rounded-full justify-center gap-0'}
+            ${isExpanded ? 'px-3 py-2 rounded-full gap-1 justify-between' : 'w-12 h-12 px-0 py-0 rounded-full justify-center gap-0'}
           `}
           style={{
             width: isExpanded ? 'auto' : '48px',
@@ -61,13 +61,13 @@ export default function Navbar() {
           <a
             href="#home"
             onClick={goHome}
-            className={`flex items-center gap-2 transition-all duration-500 group shrink-0
-              ${isExpanded ? 'px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10' : 'text-white'}
+            className={`flex items-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] group
+              ${isExpanded ? 'gap-2 px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10 shrink-0' : 'justify-center w-full text-white'}
             `}
           >
-            <Logo className="w-5 h-5 transition-transform duration-500" />
+            <Logo className="w-5 h-5 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]" />
             <span 
-              className={`font-semibold tracking-tight text-sm transition-all duration-500 overflow-hidden whitespace-nowrap
+              className={`font-semibold tracking-tight text-sm transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden whitespace-nowrap
                 ${isExpanded ? 'max-w-[200px] opacity-100' : 'max-w-0 opacity-0'}
               `}
             >
@@ -77,14 +77,14 @@ export default function Navbar() {
 
           {/* Divider */}
           <span 
-            className={`w-px h-4 bg-white/10 mx-1 shrink-0 transition-all duration-500
+            className={`w-px h-4 bg-white/10 mx-1 shrink-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
               ${isExpanded ? 'opacity-100' : 'opacity-0 scale-0'}
             `} 
           />
 
           {/* Nav links (Clipped when shrunk) */}
           <div 
-            className={`flex items-center gap-1 transition-all duration-500 overflow-hidden whitespace-nowrap
+            className={`flex items-center gap-1 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden whitespace-nowrap
               ${isExpanded ? 'max-w-[800px] opacity-100 ml-1' : 'max-w-0 opacity-0 ml-0'}
             `}
           >
