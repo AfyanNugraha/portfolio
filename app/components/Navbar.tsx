@@ -19,92 +19,118 @@ const LINKS = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-[#1f1f1f]">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a
-          href="#home"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(false);
-            // Home section selalu di posisi paling atas (desktop & mobile),
-            // jadi scroll langsung ke atas — scrollIntoView pada elemen
-            // display:none (duplikat id="home") itu no-op.
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (window.location.hash !== '#home') {
-              window.history.pushState(null, '', '#home');
-            }
-          }}
-          className="flex items-center gap-3 group"
-        >
-          <Logo className="w-7 h-7 text-white transition-colors group-hover:text-blue-400" />
-          <span className="text-white font-semibold tracking-tight text-sm">
-            {profile.brand}
-          </span>
-        </a>
+  const goHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.hash !== '#home') {
+      window.history.pushState(null, '', '#home');
+    }
+  };
 
-        {/* Desktop links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400 font-medium">
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* ── Desktop: floating pill ── */}
+      <div className="hidden md:flex justify-center pt-4 px-6 pointer-events-none">
+        <nav
+          className="pointer-events-auto flex items-center gap-1 px-3 py-2 rounded-full
+            bg-[#0d0d0d]/80 backdrop-blur-xl
+            border border-white/[0.08]
+            shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.05)]"
+          aria-label="Site navigation"
+        >
+          {/* Logo + brand */}
+          <a
+            href="#home"
+            onClick={goHome}
+            className="flex items-center gap-2 px-3 py-1 mr-1 rounded-full
+              text-white hover:text-blue-400
+              hover:bg-blue-500/10 transition-colors group"
+          >
+            <Logo className="w-5 h-5 transition-colors" />
+            <span className="font-semibold tracking-tight text-sm">{profile.brand}</span>
+          </a>
+
+          {/* Divider */}
+          <span className="w-px h-4 bg-white/10 mx-1 shrink-0" />
+
+          {/* Nav links */}
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="hover:text-blue-400 transition-colors">
+            <a
+              key={l.href}
+              href={l.href}
+              className="px-3 py-1.5 rounded-full text-sm font-medium text-zinc-400
+                hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+            >
               {l.label}
             </a>
           ))}
         </nav>
-
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          className="md:hidden w-10 h-10 -mr-2 flex flex-col items-center justify-center gap-1 text-zinc-300 hover:text-blue-400 transition-colors relative group"
-        >
-          <div className="w-5 flex flex-col items-center justify-center gap-1">
-            <span
-              className={`block w-5 h-0.5 bg-current transition-all duration-300 transform origin-center ${
-                open ? 'translate-y-1.5 rotate-45' : ''
-              }`}
-            />
-            <span
-              className={`block w-5 h-0.5 bg-current transition-all duration-200 ${
-                open ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
-              }`}
-            />
-            <span
-              className={`block w-5 h-0.5 bg-current transition-all duration-300 transform origin-center ${
-                open ? '-translate-y-1.5 -rotate-45' : ''
-              }`}
-            />
-          </div>
-        </button>
       </div>
 
-      {/* Mobile dropdown */}
-      <div
-        className={`md:hidden grid transition-all duration-300 ease-out bg-[#0a0a0a]/95 backdrop-blur-xl border-b shadow-2xl ${
-          open ? 'grid-rows-[1fr] opacity-100 border-[#1f1f1f]' : 'grid-rows-[0fr] opacity-0 border-transparent pointer-events-none'
-        }`}
-      >
-        <div className="overflow-hidden">
-          <nav className="px-6 py-6 flex flex-col gap-5 text-base text-zinc-300 font-medium">
-            {LINKS.map((l, i) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                style={{
-                  transitionDelay: open ? `${i * 60}ms` : '0ms',
-                }}
-                className={`flex items-center justify-between hover:text-blue-400 hover:pl-2 transition-all duration-300 ${
-                  open ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+      {/* ── Mobile: full-width bar + dropdown (unchanged) ── */}
+      <div className="md:hidden backdrop-blur-md bg-[#0a0a0a]/80 border-b border-[#1f1f1f]">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="#home" onClick={goHome} className="flex items-center gap-3 group">
+            <Logo className="w-7 h-7 text-white transition-colors group-hover:text-blue-400" />
+            <span className="text-white font-semibold tracking-tight text-sm">
+              {profile.brand}
+            </span>
+          </a>
+
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="w-10 h-10 -mr-2 flex flex-col items-center justify-center gap-1
+              text-zinc-300 hover:text-blue-400 transition-colors"
+          >
+            <div className="w-5 flex flex-col items-center justify-center gap-1">
+              <span
+                className={`block w-5 h-0.5 bg-current transition-all duration-300 transform origin-center ${
+                  open ? 'translate-y-1.5 rotate-45' : ''
                 }`}
-              >
-                <span>{l.label}</span>
-                <span className="text-xs text-zinc-600 font-mono">0{i + 1}</span>
-              </a>
-            ))}
-          </nav>
+              />
+              <span
+                className={`block w-5 h-0.5 bg-current transition-all duration-200 ${
+                  open ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
+                }`}
+              />
+              <span
+                className={`block w-5 h-0.5 bg-current transition-all duration-300 transform origin-center ${
+                  open ? '-translate-y-1.5 -rotate-45' : ''
+                }`}
+              />
+            </div>
+          </button>
+        </div>
+
+        <div
+          className={`grid transition-all duration-300 ease-out bg-[#0a0a0a]/95 backdrop-blur-xl border-b shadow-2xl ${
+            open
+              ? 'grid-rows-[1fr] opacity-100 border-[#1f1f1f]'
+              : 'grid-rows-[0fr] opacity-0 border-transparent pointer-events-none'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <nav className="px-6 py-6 flex flex-col gap-5 text-base text-zinc-300 font-medium">
+              {LINKS.map((l, i) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  style={{ transitionDelay: open ? `${i * 60}ms` : '0ms' }}
+                  className={`flex items-center justify-between hover:text-blue-400 hover:pl-2 transition-all duration-300 ${
+                    open ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+                  }`}
+                >
+                  <span>{l.label}</span>
+                  <span className="text-xs text-zinc-600 font-mono">0{i + 1}</span>
+                </a>
+              ))}
+            </nav>
+          </div>
         </div>
       </div>
     </header>
