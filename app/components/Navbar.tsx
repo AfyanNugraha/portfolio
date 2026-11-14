@@ -57,7 +57,7 @@ export default function Navbar() {
           }}
           aria-label="Site navigation"
         >
-          {/* Logo + Brand (Brand disappears when shrunk) */}
+          {/* Logo + Brand (Brand slides out when expanded) */}
           <a
             href="#home"
             onClick={goHome}
@@ -65,10 +65,10 @@ export default function Navbar() {
               ${isExpanded ? 'gap-2 px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10 shrink-0' : 'justify-center w-full text-white'}
             `}
           >
-            <Logo className="w-5 h-5 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]" />
+            <Logo className="w-5 h-5 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0" />
             <span 
               className={`font-semibold tracking-tight text-sm transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden whitespace-nowrap
-                ${isExpanded ? 'max-w-[200px] opacity-100' : 'max-w-0 opacity-0'}
+                ${isExpanded ? 'max-w-[200px] opacity-100 translate-x-0' : 'max-w-0 opacity-0 -translate-x-3'}
               `}
             >
               {profile.brand}
@@ -78,14 +78,14 @@ export default function Navbar() {
           {/* Divider */}
           <span 
             className={`w-px h-4 bg-white/10 mx-1 shrink-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-              ${isExpanded ? 'opacity-100' : 'opacity-0 scale-0'}
+              ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}
             `} 
           />
 
-          {/* Nav links (Clipped when shrunk) */}
+          {/* Nav links (Slides out horizontally when expanded) */}
           <div 
             className={`flex items-center gap-1 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden whitespace-nowrap
-              ${isExpanded ? 'max-w-[800px] opacity-100 ml-1' : 'max-w-0 opacity-0 ml-0'}
+              ${isExpanded ? 'max-w-[800px] opacity-100 translate-x-0 ml-1' : 'max-w-0 opacity-0 translate-x-6 ml-0'}
             `}
           >
             {LINKS.map((l) => (
