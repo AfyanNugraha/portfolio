@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Logo } from './Intro';
 import { getProfile, getContact } from '@/lib/content';
 
@@ -18,6 +18,15 @@ const LINKS = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const goHome = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,42 +38,52 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
-      {/* ── Desktop: floating pill ── */}
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+      {/* ── Desktop: Morphed Navigation ── */}
       <div className="hidden md:flex justify-center pt-4 px-6 pointer-events-none">
         <nav
-          className="pointer-events-auto flex items-center gap-1 px-3 py-2 rounded-full
-            bg-[#0d0d0d]/80 backdrop-blur-xl
-            border border-white/[0.08]
-            shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.05)]"
+          className={`pointer-events-auto flex items-center transition-all duration-500 ease-in-out
+            ${scrolled 
+              ? 'gap-1 px-3 py-2 rounded-full bg-[#0d0d0d]/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)]' 
+              : 'gap-8 px-8 py-4 rounded-2xl bg-transparent border-transparent w-full max-w-7xl'
+            }`}
           aria-label="Site navigation"
         >
           {/* Logo + brand */}
           <a
             href="#home"
             onClick={goHome}
-            className="flex items-center gap-2 px-3 py-1 mr-1 rounded-full
-              text-white hover:text-blue-400
-              hover:bg-blue-500/10 transition-colors group"
+            className={`flex items-center gap-2 transition-all duration-500 group
+              ${scrolled ? 'px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10' : 'text-white'}
+            `}
           >
-            <Logo className="w-5 h-5 transition-colors" />
-            <span className="font-semibold tracking-tight text-sm">{profile.brand}</span>
+            <Logo className={`${scrolled ? 'w-5 h-5' : 'w-7 h-7'} transition-all duration-500`} />
+            <span className={`font-semibold tracking-tight ${scrolled ? 'text-sm' : 'text-base'}`}>
+              {profile.brand}
+            </span>
           </a>
 
-          {/* Divider */}
-          <span className="w-px h-4 bg-white/10 mx-1 shrink-0" />
+          {/* Divider & Spacer logic */}
+          {!scrolled && <div className="flex-1" />}
+          {scrolled && <span className="w-px h-4 bg-white/10 mx-1 shrink-0 transition-opacity duration-500 opacity-100" />}
 
           {/* Nav links */}
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="px-3 py-1.5 rounded-full text-sm font-medium text-zinc-400
-                hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
+          <div className={`flex items-center ${scrolled ? 'gap-1' : 'gap-8'}`}>
+            {LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className={`transition-all duration-500 font-medium
+                  ${scrolled 
+                    ? 'px-3 py-1.5 rounded-full text-sm text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10' 
+                    : 'text-zinc-400 hover:text-blue-400 text-sm'
+                  }
+                `}
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
         </nav>
       </div>
 
