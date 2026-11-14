@@ -19,10 +19,11 @@ const LINKS = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 40);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -37,48 +38,61 @@ export default function Navbar() {
     }
   };
 
+  const isExpanded = !scrolled || hovered;
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
-      {/* ── Desktop: Morphed Navigation ── */}
-      <div className="hidden md:flex justify-center pt-4 px-6 pointer-events-none">
+    <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+      {/* ── Desktop: Morphed Floating Pill ── */}
+      <div className="hidden md:flex justify-center pt-4 px-6">
         <nav
-          className={`pointer-events-auto flex items-center transition-all duration-500 ease-in-out
-            ${scrolled 
-              ? 'gap-1 px-3 py-2 rounded-full bg-[#0d0d0d]/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7)]' 
-              : 'gap-8 px-8 py-4 rounded-2xl bg-transparent border-transparent w-full max-w-7xl'
-            }`}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          className={`pointer-events-auto flex items-center transition-all duration-500 ease-in-out h-12 overflow-hidden
+            bg-[#0d0d0d]/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8)]
+            ${isExpanded ? 'px-3 py-2 rounded-full gap-1' : 'w-12 h-12 px-0 py-0 rounded-full justify-center gap-0'}
+          `}
+          style={{
+            width: isExpanded ? 'auto' : '48px',
+            maxWidth: isExpanded ? '1000px' : '48px',
+          }}
           aria-label="Site navigation"
         >
-          {/* Logo + brand */}
+          {/* Logo + Brand (Brand disappears when shrunk) */}
           <a
             href="#home"
             onClick={goHome}
-            className={`flex items-center gap-2 transition-all duration-500 group
-              ${scrolled ? 'px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10' : 'text-white'}
+            className={`flex items-center gap-2 transition-all duration-500 group shrink-0
+              ${isExpanded ? 'px-3 py-1 mr-1 rounded-full text-white hover:text-blue-400 hover:bg-blue-500/10' : 'text-white'}
             `}
           >
-            <Logo className={`${scrolled ? 'w-5 h-5' : 'w-7 h-7'} transition-all duration-500`} />
-            <span className={`font-semibold tracking-tight ${scrolled ? 'text-sm' : 'text-base'}`}>
+            <Logo className="w-5 h-5 transition-transform duration-500" />
+            <span 
+              className={`font-semibold tracking-tight text-sm transition-all duration-500 overflow-hidden whitespace-nowrap
+                ${isExpanded ? 'max-w-[200px] opacity-100' : 'max-w-0 opacity-0'}
+              `}
+            >
               {profile.brand}
             </span>
           </a>
 
-          {/* Divider & Spacer logic */}
-          {!scrolled && <div className="flex-1" />}
-          {scrolled && <span className="w-px h-4 bg-white/10 mx-1 shrink-0 transition-opacity duration-500 opacity-100" />}
+          {/* Divider */}
+          <span 
+            className={`w-px h-4 bg-white/10 mx-1 shrink-0 transition-all duration-500
+              ${isExpanded ? 'opacity-100' : 'opacity-0 scale-0'}
+            `} 
+          />
 
-          {/* Nav links */}
-          <div className={`flex items-center ${scrolled ? 'gap-1' : 'gap-8'}`}>
+          {/* Nav links (Clipped when shrunk) */}
+          <div 
+            className={`flex items-center gap-1 transition-all duration-500 overflow-hidden whitespace-nowrap
+              ${isExpanded ? 'max-w-[800px] opacity-100 ml-1' : 'max-w-0 opacity-0 ml-0'}
+            `}
+          >
             {LINKS.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
-                className={`transition-all duration-500 font-medium
-                  ${scrolled 
-                    ? 'px-3 py-1.5 rounded-full text-sm text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10' 
-                    : 'text-zinc-400 hover:text-blue-400 text-sm'
-                  }
-                `}
+                className="px-3 py-1.5 rounded-full text-sm font-medium text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
               >
                 {l.label}
               </a>
